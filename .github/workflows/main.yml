@@ -28,11 +28,17 @@ jobs:
 
       - name: Clonar toolchain GCC 4.9 (aarch64-linux-android)
         run: |
-          git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 toolchain-64
+          git clone --depth=1 -b android-9.0.0_r1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 toolchain-64
 
       - name: Clonar toolchain GCC 4.9 (arm-linux-androideabi, p/ módulos/thumb)
         run: |
-          git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 toolchain-32
+          git clone --depth=1 -b android-9.0.0_r1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 toolchain-32
+
+      - name: Verificar se os compiladores existem
+        run: |
+          test -x toolchain-64/bin/aarch64-linux-android-gcc || (echo "GCC 64-bit não encontrado!" && exit 1)
+          test -x toolchain-32/bin/arm-linux-androideabi-gcc || (echo "GCC 32-bit não encontrado!" && exit 1)
+          toolchain-64/bin/aarch64-linux-android-gcc --version
 
       - name: Exportar variáveis de ambiente
         run: |
