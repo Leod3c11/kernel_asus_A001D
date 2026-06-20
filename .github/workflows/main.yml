@@ -1,0 +1,78 @@
+name: Build A001D Kernel (3.18)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ 11 ]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+        with:
+          repository: Leod3c11/kernel_asus_A001D
+          ref: 11
+          path: kernel
+          fetch-depth: 1
+
+      - name: Instalar dependências de build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential bc bison flex libssl-dev libncurses-dev \
+            git curl python2 python-is-python2 zip lib32z1 lib32ncurses6 \
+            lib32stdc++6 u-boot-tools
+
+      - name: Clonar toolchain GCC 4.9 (aarch64-linux-android)
+        run: |
+          git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 toolchain-64
+
+      - name: Clonar toolchain GCC 4.9 (arm-eabi, p/ módulos/thumb)
+        run: |
+          git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.9 toolchain-32
+
+      - name: Exportar variáveis de ambiente
+        run: |
+          echo "ARCH=arm64" >> $GITHUB_ENV
+          echo "SUBARCH=arm64" >> $GITHUB_ENV
+          echo "CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain-64/bin/aarch64-linux-android-" >> $GITHUB_ENV
+          echo "CROSS_COMPILE_ARM32=$GITHUB_WORKSPACE/toolchain-32/bin/arm-eabi-" >> $GITHUB_ENV
+          echo "KBUILD_BUILD_USER=Leonardo" >> $GITHUB_ENV
+          echo "KBUILD_BUILD_HOST=github-actions" >> $GITHUB_ENV
+
+      - name: Gerar .config a partir do defconfig
+        working-directory: kernel
+        run: |
+          make O=out ARCH=arm64 A001D_defconfig
+
+      - name: Compilar kernel
+        working-directory: kernel
+        run: |
+          make -j$(nproc --all) O=out \
+            ARCH=arm64 \
+            CROSS_COMPILE=$CROSS_COMPILE \
+            CROSS_COMPILE_ARM32=$CROSS_COMPILE_ARM32 \
+            2>&1 | tee build.log
+
+      - name: Conferir se a Image foi gerada
+        working-directory: kernel
+        run: |
+          ls -la out/arch/arm64/boot/ || (echo "Build falhou, veja build.log" && exit 1)
+
+      - name: Upload do log de build
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: kernel/build.log
+
+      - name: Upload da Image compilada
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-A001D-output
+          path: |
+            kernel/out/arch/arm64/boot/Image*
+            kernel/out/arch/arm64/boot/dts/**/*.dtb
+            kernel/out/.config
