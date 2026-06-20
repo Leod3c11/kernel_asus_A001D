@@ -30,16 +30,16 @@ jobs:
         run: |
           git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 toolchain-64
 
-      - name: Clonar toolchain GCC 4.9 (arm-eabi, p/ módulos/thumb)
+      - name: Clonar toolchain GCC 4.9 (arm-linux-androideabi, p/ módulos/thumb)
         run: |
-          git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.9 toolchain-32
+          git clone --depth=1 https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 toolchain-32
 
       - name: Exportar variáveis de ambiente
         run: |
           echo "ARCH=arm64" >> $GITHUB_ENV
           echo "SUBARCH=arm64" >> $GITHUB_ENV
           echo "CROSS_COMPILE=$GITHUB_WORKSPACE/toolchain-64/bin/aarch64-linux-android-" >> $GITHUB_ENV
-          echo "CROSS_COMPILE_ARM32=$GITHUB_WORKSPACE/toolchain-32/bin/arm-eabi-" >> $GITHUB_ENV
+          echo "CROSS_COMPILE_ARM32=$GITHUB_WORKSPACE/toolchain-32/bin/arm-linux-androideabi-" >> $GITHUB_ENV
           echo "KBUILD_BUILD_USER=Leonardo" >> $GITHUB_ENV
           echo "KBUILD_BUILD_HOST=github-actions" >> $GITHUB_ENV
 
