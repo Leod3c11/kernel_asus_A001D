@@ -3,7 +3,7 @@ name: Build A001D Kernel (3.18)
 on:
   workflow_dispatch:
   push:
-    branches: [ 11 ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -52,7 +52,7 @@ jobs:
       - name: Gerar .config a partir do defconfig
         working-directory: kernel
         run: |
-          make O=out ARCH=arm64 msm8937-perf_defconfig
+          make O=out ARCH=arm64 A001D_defconfig
 
       - name: Compilar kernel
         working-directory: kernel
