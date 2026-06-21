@@ -82,5 +82,67 @@ jobs:
           path: |
             kernel/out/arch/arm64/boot/Image*
             kernel/out/arch/arm64/boot/dts/**/*.dtb
-            kernel/out/arch/arm/*
             kernel/out/.config
+
+      - name: Clonar template do AnyKernel3
+        run: |
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git ak3
+
+      - name: Configurar anykernel.sh com offsets oficiais do A001D
+        run: |
+          cat > ak3/anykernel.sh << 'EOF'
+          ### AnyKernel3 Ramdisk Mod Script
+          ## osm0sis @ xda-developers
+
+          properties() { '
+          kernel.string=A001D Custom Kernel 3.18 by Leonardo
+          do.devicecheck=1
+          do.modules=0
+          do.systemless=1
+          do.cleanup=1
+          do.cleanuponabort=0
+          device.name1=A001D
+          device.name2=ASUS_A001D
+          device.name3=ASUS_A001D_2
+          supported.versions=
+          supported.patchlevels=
+          '; } # end properties
+
+          ### AnyKernel methods (DO NOT CHANGE)
+          . tools/ak3-core.sh
+
+          ## boot shell variables
+          block=/dev/block/bootdevice/by-name/boot;
+          is_slot_device=0;
+          ramdisk_compression=auto;
+          patch_vbmeta_flag=auto;
+
+          ## AnyKernel install
+          dump_boot;
+
+          # parâmetros oficiais vindos do BoardConfig.mk do GuilianoS/device_asus_A001D
+          BASE=0x80000000;
+          PAGESIZE=2048;
+          RAMDISK_OFFSET=0x01000000;
+          TAGS_OFFSET=0x00000100;
+          CMDLINE="console=ttyHSL0,115200,n8 androidboot.console=ttyHSL0 androidboot.hardware=qcom msm_rtb.filter=0x237 ehci-hcd.park=3 lpm_levels.sleep_disabled=1 androidboot.bootdevice=7824900.sdhci earlycon=msm_hsl_uart,0x78af000 firmware_class.path=/vendor/firmware_mnt/image loop.max_part=7 androidboot.usbconfigfs=false androidboot.selinux androidboot.selinux=permissive";
+
+          write_boot;
+          ## end install
+          EOF
+
+      - name: Copiar Image.gz-dtb compilada para o AnyKernel3
+        run: |
+          cp kernel/out/arch/arm64/boot/Image.gz-dtb ak3/Image.gz-dtb
+
+      - name: Gerar zip flashável
+        working-directory: ak3
+        run: |
+          rm -rf .git
+          zip -r9 ../A001D-kernel-$(date +%Y%m%d-%H%M).zip . -x ".git*"
+
+      - name: Upload do zip flashável (AnyKernel3)
+        uses: actions/upload-artifact@v4
+        with:
+          name: A001D-kernel-flashable-zip
+          path: A001D-kernel-*.zip
