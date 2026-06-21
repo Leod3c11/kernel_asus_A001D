@@ -3,7 +3,7 @@ name: Build A001D Kernel (3.18)
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ 11 ]
 
 jobs:
   build:
@@ -82,4 +82,5 @@ jobs:
           path: |
             kernel/out/arch/arm64/boot/Image*
             kernel/out/arch/arm64/boot/dts/**/*.dtb
+            kernel/out/arch/arm/*
             kernel/out/.config
